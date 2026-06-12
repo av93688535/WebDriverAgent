@@ -1,0 +1,42 @@
+name: Build WDA for TrollStore
+
+# 允许我们在网页上点击一个按钮手动触发编译
+on:
+  workflow_dispatch: 
+
+jobs:
+  build:
+    runs-on: macos-latest # 免费白嫖 GitHub 的最新版 Mac 虚拟机
+
+    steps:
+    - name: 1. 拉取源代码
+      uses: actions/checkout@v4
+
+    - name: 2. 准备依赖环境
+      run: ./Scripts/bootstrap.sh || true
+
+    - name: 3. 使用 Xcode 开始无证书裸编译
+      run: |
+        xcodebuild build-for-testing \
+          -project WebDriverAgent.xcodeproj \
+          -scheme WebDriverAgentRunner \
+          -destination "generic/platform=iOS" \
+          -configuration Release \
+          -derivedDataPath ./build \
+          CODE_SIGN_IDENTITY="" \
+          CODE_SIGNING_REQUIRED=NO \
+          CODE_SIGNING_ALLOWED=NO
+
+    - name: 4. 将编译好的 App 打包为 IPA 格式
+      run: |
+        mkdir -p Payload
+        # 将生成的无签名 App 放入 Payload 文件夹
+        cp -r ./build/Build/Products/Release-iphoneos/WebDriverAgentRunner-Runner.app Payload/
+        # 压缩成巨魔能认的 ipa 格式
+        zip -r WebDriverAgentRunner.ipa Payload
+
+    - name: 5. 产出并上传安装包文件
+      uses: actions/upload-artifact@v4
+      with:
+        name: WebDriverAgentRunner-IPA
+        path: WebDriverAgentRunner.ipa
