@@ -33,7 +33,7 @@ jobs:
         # 将生成的无签名 App 放入 Payload 文件夹
         cp -r ./build/Build/Products/Release-iphoneos/WebDriverAgentRunner-Runner.app Payload/
         # 压缩成巨魔能认的 ipa 格式
-        zip -r WebDriverAgentRunner.ipa Payload
+        zip -ry WebDriverAgentRunner.ipa Payload
 
     - name: 5. 产出并上传安装包文件
       uses: actions/upload-artifact@v4
