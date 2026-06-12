@@ -27,12 +27,15 @@ jobs:
           CODE_SIGNING_REQUIRED=NO \
           CODE_SIGNING_ALLOWED=NO
 
-    - name: 4. 将编译好的 App 打包为 IPA 格式
+- name: 4. 强制注入签名空间并打包 (解决 Error 175)
       run: |
         mkdir -p Payload
-        # 将生成的无签名 App 放入 Payload 文件夹
         cp -r ./build/Build/Products/Release-iphoneos/WebDriverAgentRunner-Runner.app Payload/
-        # 压缩成巨魔能认的 ipa 格式
+        
+        # 核心修复：用 Mac 自带的 codesign 强行注入深度伪签名，撑起 Mach-O 头部空间
+        codesign --force --deep --sign - Payload/WebDriverAgentRunner-Runner.app
+        
+        # 压缩为巨魔可认的 ipa
         zip -ry WebDriverAgentRunner.ipa Payload
 
     - name: 5. 产出并上传安装包文件
