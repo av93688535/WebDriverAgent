@@ -1,12 +1,11 @@
 name: Build WDA for TrollStore
 
-# 允许我们在网页上点击一个按钮手动触发编译
 on:
   workflow_dispatch: 
 
 jobs:
   build:
-    runs-on: macos-latest # 免费白嫖 GitHub 的最新版 Mac 虚拟机
+    runs-on: macos-latest
 
     steps:
     - name: 1. 拉取源代码
@@ -27,15 +26,11 @@ jobs:
           CODE_SIGNING_REQUIRED=NO \
           CODE_SIGNING_ALLOWED=NO
 
-- name: 4. 强制注入签名空间并打包 (解决 Error 175)
+    - name: 4. 强制注入签名空间并打包 (解决 Error 175)
       run: |
         mkdir -p Payload
         cp -r ./build/Build/Products/Release-iphoneos/WebDriverAgentRunner-Runner.app Payload/
-        
-        # 核心修复：用 Mac 自带的 codesign 强行注入深度伪签名，撑起 Mach-O 头部空间
         codesign --force --deep --sign - Payload/WebDriverAgentRunner-Runner.app
-        
-        # 压缩为巨魔可认的 ipa
         zip -ry WebDriverAgentRunner.ipa Payload
 
     - name: 5. 产出并上传安装包文件
